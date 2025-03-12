@@ -1,6 +1,7 @@
 package laks
 
 import (
+	"fmt"
 	"slices"
 	"strings"
 	"unicode"
@@ -31,9 +32,12 @@ type lexer struct {
 	tokens []Token
 }
 
-func (lxr *lexer) lex() {
+func (lxr *lexer) lex() error {
 	for lxr.canRead() {
-		r := lxr.read()
+		r, err := lxr.read()
+		if err != nil {
+			return err
+		}
 
 		if unicode.IsSpace(r) {
 			continue
@@ -46,41 +50,46 @@ func (lxr *lexer) lex() {
 		} else if slices.Contains([]rune{'+', '-', '*', '/'}, r) {
 			lxr.read_operator(r)
 		} else {
-			panic("dont understand '" + string(r) + "'")
+			return fmt.Errorf("dont understand '%v", r)
 		}
 	}
 
 	if lxr.curr == lxr.l {
 		lxr.tokens = append(lxr.tokens, Token{T_EOF, ""})
 	}
+
+	return nil
 }
 
-func (lxr *lexer) read() rune {
+func (lxr *lexer) read() (rune, error) {
 	r, s := utf8.DecodeRuneInString(lxr.src[lxr.curr:])
 	if s == 0 {
-		panic("could not read from source")
+		return r, fmt.Errorf("could not read from source")
 	}
 	lxr.curr += s
-	return r
+	return r, nil
 }
 
 func (lxr *lexer) canRead() bool {
 	return lxr.curr < lxr.l
 }
 
-func (lxr *lexer) peek() rune {
+func (lxr *lexer) peek() (rune, error) {
 	r, s := utf8.DecodeRuneInString(lxr.src[lxr.curr:])
 	if s == 0 {
-		panic("could not peek from source")
+		return r, fmt.Errorf("could not peek from source")
 	}
-	return r
+	return r, nil
 }
 
-func (lxr *lexer) read_int(start rune) {
+func (lxr *lexer) read_int(start rune) error {
 	var sb strings.Builder
 	sb.WriteRune(start)
 	for lxr.canRead() {
-		r := lxr.peek()
+		r, err := lxr.peek()
+		if err != nil {
+			return err
+		}
 		if unicode.IsDigit(r) {
 			lxr.read()
 			sb.WriteRune(r)
@@ -89,6 +98,7 @@ func (lxr *lexer) read_int(start rune) {
 		}
 	}
 	lxr.tokens = append(lxr.tokens, Token{T_INT, sb.String()})
+	return nil
 }
 
 func (lxr *lexer) read_operator(op rune) {
@@ -106,14 +116,13 @@ func (lxr *lexer) read_operator(op rune) {
 	}
 }
 
-func Lex(src string) []Token {
+func Lex(src string) ([]Token, error) {
 	var lxr lexer
 
 	lxr.src = src
 	lxr.curr = 0
 	lxr.l = utf8.RuneCountInString(src)
 
-	lxr.lex()
-
-	return lxr.tokens
+	err := lxr.lex()
+	return lxr.tokens, err
 }

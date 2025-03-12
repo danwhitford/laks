@@ -13,10 +13,22 @@ func main() {
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		tokens := laks.Lex(line)
-		exprs := laks.Parse(tokens)
+		tokens, err := laks.Lex(line)
+		if err != nil {
+			fmt.Printf("TOKERR '%s'\n", err)
+			continue
+		}
+		exprs, err := laks.Parse(tokens)
+		if err != nil {
+			fmt.Printf("PRSERR '%s'\n", err)
+			continue
+		}
 		for _, e := range exprs {
-			fmt.Println("    |  " + e.Sexpr())
+			s, err := e.Sexpr()
+			if err != nil {
+				fmt.Printf("SXPERR '%s'\n", err)				
+			}
+			fmt.Println("    |  " + s)
 		}
 	}
 

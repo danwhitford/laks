@@ -46,7 +46,10 @@ func TestParse(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			got := Parse(test.input)
+			got, err := Parse(test.input)
+			if err != nil {
+				t.Error(err)
+			}
 			if diff := cmp.Diff(test.want, got); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
@@ -101,10 +104,17 @@ func TestParsePrecendece(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			got := Parse(test.input)
+			got, err := Parse(test.input)
+			if err != nil {
+				t.Error(err)
+			}
 			var sexprs []string
 			for _, g := range got {
-				sexprs = append(sexprs, g.Sexpr())
+				s, err := g.Sexpr()
+				if err != nil {
+					t.Error(err)
+				}
+				sexprs = append(sexprs, s)
 			}
 			sexpr := strings.Join(sexprs, "\n")
 			if diff := cmp.Diff(test.want, sexpr); diff != "" {

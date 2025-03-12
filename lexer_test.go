@@ -75,7 +75,10 @@ func TestLex(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.src, func(t *testing.T) {
-			got := Lex(test.src)
+			got, err := Lex(test.src)
+			if err != nil {
+				t.Error(err)
+			}
 			if diff := cmp.Diff(test.want, got); diff != "" {
 				t.Errorf("mismatch (-want +got):\n%s", diff)
 			}
