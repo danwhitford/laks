@@ -1,6 +1,7 @@
 package laks
 
 import (
+	"slices"
 	"strings"
 	"unicode"
 	"unicode/utf8"
@@ -12,6 +13,10 @@ const (
 	T_EOF TokenType = iota
 	T_INT
 	T_SEMI
+	T_PLUS
+	T_MULT
+	T_MINUS
+	T_DIV
 )
 
 type Token struct {
@@ -30,15 +35,23 @@ func (lxr *lexer) lex() {
 	for lxr.canRead() {
 		r := lxr.read()
 
+		if unicode.IsSpace(r) {
+			continue
+		}
+
 		if unicode.IsDigit(r) {
 			lxr.read_int(r)
 		} else if r == ';' {
 			lxr.tokens = append(lxr.tokens, Token{T_SEMI, string(r)})
+		} else if slices.Contains([]rune{'+', '-', '*', '/'}, r) {
+			lxr.read_operator(r)
+		} else {
+			panic("dont understand '" + string(r) + "'")
 		}
 	}
 
 	if lxr.curr == lxr.l {
-		lxr.tokens = append(lxr.tokens, Token{T_EOF, ""})		
+		lxr.tokens = append(lxr.tokens, Token{T_EOF, ""})
 	}
 }
 
@@ -76,6 +89,21 @@ func (lxr *lexer) read_int(start rune) {
 		}
 	}
 	lxr.tokens = append(lxr.tokens, Token{T_INT, sb.String()})
+}
+
+func (lxr *lexer) read_operator(op rune) {
+	switch op {
+	case '+':
+		lxr.tokens = append(lxr.tokens, Token{T_PLUS, string(op)})
+	case '*':
+		lxr.tokens = append(lxr.tokens, Token{T_MULT, string(op)})
+	case '-':
+		lxr.tokens = append(lxr.tokens, Token{T_MINUS, string(op)})
+	case '/':
+		lxr.tokens = append(lxr.tokens, Token{T_DIV, string(op)})
+	default:
+		panic(string(op) + " is not an operator")
+	}
 }
 
 func Lex(src string) []Token {

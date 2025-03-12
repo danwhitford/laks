@@ -7,10 +7,10 @@ import (
 )
 
 func TestLex(t *testing.T) {
-	tests  := []struct{
-		src string
+	tests := []struct {
+		src  string
 		want []Token
-	} {
+	}{
 		{
 			src: "",
 			want: []Token{
@@ -47,6 +47,30 @@ func TestLex(t *testing.T) {
 				{T_EOF, ""},
 			},
 		},
+		{
+			src: "1 + 7;",
+			want: []Token{
+				{T_INT, "1"},
+				{T_PLUS, "+"},
+				{T_INT, "7"},
+				{T_SEMI, ";"},
+				{T_EOF, ""},
+			},
+		},
+		{
+			src: "1 + 7;\n18 *24;",
+			want: []Token{
+				{T_INT, "1"},
+				{T_PLUS, "+"},
+				{T_INT, "7"},
+				{T_SEMI, ";"},
+				{T_INT, "18"},
+				{T_MULT, "*"},
+				{T_INT, "24"},
+				{T_SEMI, ";"},
+				{T_EOF, ""},
+			},
+		},
 	}
 
 	for _, test := range tests {
@@ -58,4 +82,3 @@ func TestLex(t *testing.T) {
 		})
 	}
 }
-
